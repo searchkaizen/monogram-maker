@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monogram Preview Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Great+Vibes&family=Montserrat:wght@700&family=EB+Garamond&family=Dancing+Script&family=Lobster&family=Pacifico&family=Cormorant+Garamond&family=Libre+Baskerville&family=Oswald&family=Lato&family=Alex+Brush&family=Allura&display=swap" rel="stylesheet">
+    <style>
+        /* Basic body styling */
+        body {
+            font-family: sans-serif;
+            max-width: 600px; /* Max width of the overall container */
+            margin: 2rem auto;
+            padding: 1rem;
+            text-align: center;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        /* Heading style */
+        h1 {
+            color: #111;
+            margin-bottom: 1.5rem; /* Add some space below heading */
+        }
+
+        /* Controls Wrapper - NEW */
+        #controlsWrapper {
+            margin-bottom: 1.5rem; /* Space between controls and preview */
+            /* Mobile-first: default is stacked */
+        }
+
+        /* Control Group styling (for grid layout) - NEW */
+        .control-group {
+            margin-bottom: 1rem; /* Consistent spacing */
+            text-align: left; /* Align labels left in grid */
+        }
+        .control-group label {
+            margin-bottom: 0.3rem; /* Reduce space below label */
+            display: block;
+            font-weight: bold; /* Make labels slightly bolder */
+            font-size: 0.9rem;
+        }
+        .control-group input[type="text"],
+        .control-group select,
+        .control-group input[type="range"] {
+            width: 100%; /* Make inputs fill their grid cell */
+            max-width: none; /* Override previous max-width */
+            margin-bottom: 0; /* Remove bottom margin handled by group */
+            padding: 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .control-group input[type="range"] {
+            padding: 0;
+            cursor: pointer;
+        }
+        .control-group #fontSizeValue { /* Style for font size value display */
+            font-weight: normal; /* Reset font weight */
+            margin-left: 0.5rem;
+            display: inline-block;
+            min-width: 3em;
+            text-align: right;
+            font-size: 0.9rem; /* Match label size */
+        }
+        /* Specific label adjustment for slider */
+        label[for="fontSizeSlider"] {
+             display: flex; /* Align label and value span */
+             align-items: center;
+        }
+
+
+        /* General button styling */
+        button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 0.5rem;
+        }
+        /* Button hover state (when not disabled) */
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        /* Disabled button state */
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+         /* Specific styling for the CTA button inside a link */
+        a button {
+             background-color: #28a745;
+        }
+         /* Hover state for the CTA button */
+         a button:hover:not(:disabled) {
+             background-color: #218838;
+         }
+        /* Preview area styling - Always Square */
+        .preview {
+            border: 1px solid #ddd;
+            background-color: #fff;
+            margin: 1.5rem auto;
+            width: 100%; /* Make preview responsive */
+            max-width: 480px; /* Keep max size */
+            aspect-ratio: 1 / 1; /* Maintain square shape */
+            height: auto; /* Let aspect-ratio control height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-transform: uppercase; /* Default to uppercase */
+            overflow: hidden;
+            word-break: break-word;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+
+        /* --- Font Style Definitions --- */
+        .preview.serif, .inner-shape .text-span.serif { font-family: 'Playfair Display', serif; font-weight: 700; }
+        .preview.script, .inner-shape .text-span.script { font-family: 'Great Vibes', cursive; text-transform: none; }
+        .preview.eb-garamond, .inner-shape .text-span.eb-garamond { font-family: 'EB Garamond', serif; }
+        .preview.cormorant-garamond, .inner-shape .text-span.cormorant-garamond { font-family: 'Cormorant Garamond', serif; }
+        .preview.libre-baskerville, .inner-shape .text-span.libre-baskerville { font-family: 'Libre Baskerville', serif; }
+        .preview.dancing-script, .inner-shape .text-span.dancing-script { font-family: 'Dancing Script', cursive; text-transform: none; }
+        .preview.lobster, .inner-shape .text-span.lobster { font-family: 'Lobster', cursive; text-transform: none; }
+        .preview.pacifico, .inner-shape .text-span.pacifico { font-family: 'Pacifico', cursive; text-transform: none; }
+        .preview.alex-brush, .inner-shape .text-span.alex-brush { font-family: 'Alex Brush', cursive; text-transform: none; }
+        .preview.allura, .inner-shape .text-span.allura { font-family: 'Allura', cursive; text-transform: none; }
+        .preview.oswald, .inner-shape .text-span.oswald { font-family: 'Oswald', sans-serif; }
+        .preview.lato, .inner-shape .text-span.lato { font-family: 'Lato', sans-serif; }
+        /* --- End Font Style Definitions --- */
+
+
+        /* Styling for the inner shape element container */
+        .inner-shape {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            overflow: hidden; /* Hide corners of rotated elements */
+        }
+
+        /* Specific style for the CSS circle border shape */
+        .inner-shape.circle-border {
+            width: 90%;
+            height: 90%;
+            border: 3px solid black;
+            border-radius: 50%;
+            position: relative; /* Reset position for text span */
+        }
+
+
+        /* Styling for the container of SVG shapes */
+        .inner-shape.wreath,
+        .inner-shape.circle-heart,
+        .inner-shape.flower-circle-1,
+        .inner-shape.flower-circle-2,
+        .inner-shape.flower-frame {
+            position: relative; /* Needed for absolute positioning of children */
+        }
+
+        /* Styling for the SVG image graphic */
+        .inner-shape img.shape-graphic {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Scale SVG nicely */
+            z-index: 1; /* Keep graphic behind text */
+        }
+
+        /* Styling for the text span inside any inner shape */
+         .inner-shape .text-span {
+             line-height: 1;
+             text-align: center;
+             position: relative;
+             z-index: 2; /* Keep text above graphic */
+         }
+
+
+        /* --- Desktop Layout (Applies grid) --- */
+        @media (min-width: 600px) {
+            #controlsWrapper {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+                gap: 1rem 1.5rem; /* Row gap, Column gap */
+                text-align: left; /* Align content left within grid cells */
+            }
+            /* Optional: Span font size slider across both columns if desired */
+            /* .control-group.font-size-group { grid-column: 1 / -1; } */
+        }
+
+
+        /* --- Mobile Layout Adjustments --- */
+        @media (max-width: 599px) { /* Target screens smaller than the grid breakpoint */
+             .preview {
+                width: 90vw; /* Use viewport width */
+                max-width: 350px; /* Slightly larger max on mobile */
+             }
+             .control-group {
+                 text-align: center; /* Center labels on mobile */
+             }
+             label[for="fontSizeSlider"] {
+                 justify-content: center; /* Center label/value span */
+             }
+             #fontSizeValue {
+                margin-left: 0.5rem; /* Restore some margin */
+             }
+             /* Ensure inputs take reasonable width on mobile */
+             .control-group input[type="text"],
+             .control-group select,
+             .control-group input[type="range"] {
+                width: 90%;
+                max-width: 300px; /* Limit width on mobile */
+                margin-left: auto; /* Center inputs */
+                margin-right: auto;
+             }
+
+            .inner-shape.circle-border {
+                border-width: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Custom Monogram Preview Tool</h1>
+
+    <div id="controlsWrapper">
+        <div class="control-group">
+            <label for="initials">Enter 1 to 3 characters:</label>
+            <input type="text" id="initials" maxlength="3" placeholder="A&B" aria-label="Enter 1 to 3 characters for monogram">
+        </div>
+
+        <div class="control-group">
+            <label for="style">Select a font:</label>
+            <select id="style" aria-label="Select monogram style">
+                <option value="serif">Classic Serif (Playfair)</option>
+                <option value="script">Modern Script (Great Vibes)</option>
+                <option value="eb-garamond">EB Garamond (Serif)</option>
+                <option value="cormorant-garamond">Cormorant Garamond (Serif)</option>
+                <option value="libre-baskerville">Libre Baskerville (Serif)</option>
+                <option value="dancing-script">Dancing Script</option>
+                <option value="lobster">Lobster</option>
+                <option value="pacifico">Pacifico</option>
+                <option value="alex-brush">Alex Brush</option>
+                <option value="allura">Allura</option>
+                <option value="oswald">Oswald (Sans)</option>
+                <option value="lato">Lato (Sans)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="shape">Select a shape:</label>
+            <select id="shape" aria-label="Select preview shape">
+                <option value="square">None</option>
+                <option value="wreath">Circle Wreath</option>
+                <option value="circle-heart">Circle Heart</option>
+                <option value="flower-circle-1">Flower Circle 1</option>
+                <option value="flower-circle-2">Flower Circle 2</option>
+                <option value="flower-frame">Flower Frame</option>
+                <option value="circle-border">Circle Border</option>
+            </select>
+        </div>
+
+        <div class="control-group font-size-group"> <label for="fontSizeSlider">Font Size: <span id="fontSizeValue">4</span></label>
+            <input type="range" id="fontSizeSlider" min="1" max="14" value="4" step="0.1" aria-label="Adjust font size">
+        </div>
+    </div> <div id="preview" class="preview" aria-live="polite">
+        </div>
+
+    <div class="button-group"> <button id="downloadBtn" disabled>Download PNG</button>
+        <br><br>
+        <a id="ctaLink" href="#" target="_blank" rel="noopener noreferrer">
+            <button id="ctaBtn" disabled>Turn this into a custom stamp</button>
+        </a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to HTML elements
+            const initialsInput = document.getElementById('initials');
+            const styleSelect = document.getElementById('style');
+            const shapeSelect = document.getElementById('shape');
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            const fontSizeValueSpan = document.getElementById('fontSizeValue');
+            const previewDiv = document.getElementById('preview');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const ctaLink = document.getElementById('ctaLink');
+            const ctaBtn = document.getElementById('ctaBtn');
+
+            // URLs
+            const shopifyProductUrl = 'https://stampedwithlovexoxo.com/products/custom-stamp';
+            const wreathSvgUrl = 'https://cdn.shopify.com/s/files/1/0665/7068/2581/files/wreath-1.svg';
+            const circleHeartSvgUrl = 'https://cdn.shopify.com/s/files/1/0665/7068/2581/files/circle-heart-1.svg';
+            const flowerCircle1SvgUrl = 'https://cdn.shopify.com/s/files/1/0665/7068/2581/files/flower-circle-1.svg';
+            const flowerCircle2SvgUrl = 'https://cdn.shopify.com/s/files/1/0665/7068/2581/files/flower-circle-2.svg';
+            const flowerFrameSvgUrl = 'https://cdn.shopify.com/s/files/1/0665/7068/2581/files/flower-frame.svg?v=1745980664';
+
+            // Function to update the preview display
+            function renderPreview() {
+                const rawText = initialsInput.value;
+                const text = rawText.trim().toUpperCase();
+                const style = styleSelect.value;
+                const shape = shapeSelect.value;
+                const fontSize = fontSizeSlider.value;
+
+                fontSizeValueSpan.textContent = fontSize;
+                const isValid = text.length >= 1 && text.length <= 3;
+
+                previewDiv.innerHTML = '';
+                previewDiv.className = 'preview';
+                previewDiv.style.fontSize = '';
+
+                if (isValid) {
+                    let textElement;
+                    let targetElementForFontSize;
+                    const isScriptFont = ['script', 'dancing-script', 'lobster', 'pacifico', 'alex-brush', 'allura'].includes(style);
+
+                    // Determine if the shape uses an external SVG
+                    const isSvgShape = ['wreath', 'circle-heart', 'flower-circle-1', 'flower-circle-2', 'flower-frame'].includes(shape);
+                    // Determine if shape uses CSS border
+                    const isCssBorderShape = ['circle-border'].includes(shape);
+
+
+                    if (isCssBorderShape) { // Handle CSS Circle border
+                        const innerShapeDiv = document.createElement('div');
+                        innerShapeDiv.className = 'inner-shape circle-border';
+
+                        textElement = document.createElement('span');
+                        textElement.className = 'text-span ' + style;
+                        textElement.textContent = isScriptFont ? rawText.trim() : text;
+
+                        innerShapeDiv.appendChild(textElement);
+                        previewDiv.appendChild(innerShapeDiv);
+                        targetElementForFontSize = textElement;
+
+                    } else if (isSvgShape) { // Handle SVG shapes
+                        const innerShapeDiv = document.createElement('div');
+                        innerShapeDiv.className = 'inner-shape ' + shape;
+
+                        const shapeImg = document.createElement('img');
+                        shapeImg.className = 'shape-graphic';
+
+                        // Set src and alt based on shape
+                        let imgSrc, imgAlt;
+                        switch (shape) {
+                            case 'wreath': imgSrc = wreathSvgUrl; imgAlt = 'Wreath Border'; break;
+                            case 'circle-heart': imgSrc = circleHeartSvgUrl; imgAlt = 'Circle Heart Border'; break;
+                            case 'flower-circle-1': imgSrc = flowerCircle1SvgUrl; imgAlt = 'Flower Circle Border 1'; break;
+                            case 'flower-circle-2': imgSrc = flowerCircle2SvgUrl; imgAlt = 'Flower Circle Border 2'; break;
+                            case 'flower-frame': imgSrc = flowerFrameSvgUrl; imgAlt = 'Flower Frame Border'; break;
+                        }
+                        shapeImg.src = imgSrc;
+                        shapeImg.alt = imgAlt;
+                        shapeImg.onerror = () => { console.error(`Failed to load ${shape} SVG`); shapeImg.style.display = 'none'; };
+
+                        textElement = document.createElement('span');
+                        textElement.className = 'text-span ' + style;
+                        textElement.textContent = isScriptFont ? rawText.trim() : text;
+
+                        innerShapeDiv.appendChild(shapeImg);
+                        innerShapeDiv.appendChild(textElement);
+                        previewDiv.appendChild(innerShapeDiv);
+                        targetElementForFontSize = textElement;
+
+                    } else { // 'square' shape
+                        previewDiv.classList.add(style);
+                        previewDiv.textContent = isScriptFont ? rawText.trim() : text;
+                        targetElementForFontSize = previewDiv;
+                    }
+
+                    // Apply dynamic font size
+                    if (targetElementForFontSize) {
+                        targetElementForFontSize.style.fontSize = fontSize + 'rem';
+                        if (isScriptFont) {
+                            targetElementForFontSize.style.textTransform = 'none';
+                        } else {
+                             targetElementForFontSize.style.textTransform = 'uppercase';
+                        }
+                    }
+
+                    // Update CTA link & enable buttons
+                    ctaLink.href = `${shopifyProductUrl}?monogram=${encodeURIComponent(rawText.trim())}`;
+                    downloadBtn.disabled = false;
+                    ctaBtn.disabled = false;
+
+                } else {
+                    // Invalid input
+                    previewDiv.textContent = '';
+                    ctaLink.href = '#';
+                    downloadBtn.disabled = true;
+                    ctaBtn.disabled = true;
+                }
+            }
+
+            // Function to handle the download button click
+            function downloadImage() {
+                const rawText = initialsInput.value.trim();
+                const textForFilename = rawText.toUpperCase();
+
+                if (!(textForFilename.length >= 1 && textForFilename.length <= 3)) {
+                    console.error("Invalid input length, download prevented.");
+                    return;
+                }
+                const filename = `monogram_${encodeURIComponent(textForFilename)}.png`;
+                const options = {
+                     scale: 2,
+                     backgroundColor: '#ffffff',
+                     logging: false,
+                     useCORS: true,
+                     allowTaint: true
+                 };
+
+                html2canvas(previewDiv, options).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }).catch(err => {
+                    console.error("Error generating canvas: ", err);
+                    const errorMsg = err.message || '';
+                    if (errorMsg.includes('Tainted canvases') || errorMsg.includes('SecurityError')) {
+                         alert("Sorry, there was an issue loading the shape image for download due to security settings. Please try again or contact support.");
+                    } else {
+                         alert("Sorry, there was an error creating the image.");
+                    }
+                });
+            }
+
+            // Add event listeners
+            initialsInput.addEventListener('input', renderPreview);
+            styleSelect.addEventListener('change', renderPreview);
+            shapeSelect.addEventListener('change', renderPreview);
+            fontSizeSlider.addEventListener('input', renderPreview);
+            downloadBtn.addEventListener('click', downloadImage);
+
+            // Initial render on page load
+            renderPreview();
+        });
+    </script>
+</body>
+</html>
